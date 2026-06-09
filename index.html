@@ -375,7 +375,11 @@ async function startApp(){
 function initRegion(){
   const sel=document.getElementById('region');const prev=regionFilter;sel.innerHTML='';
   const all=document.createElement('option');all.value='全部';all.textContent='全部地區 ('+roster.length+')';sel.appendChild(all);
-  REGIONS.forEach(rg=>{const n=roster.filter(p=>p.region===rg).length;const o=document.createElement('option');o.value=rg;o.textContent=rg+' ('+n+')';sel.appendChild(o);});
+  // derive regions from actual roster data
+  const actualRegions=[...new Set(roster.map(p=>p.region).filter(Boolean))];
+  // sort by ALL_REGIONS order
+  actualRegions.sort((a,b)=>{const ai=ALL_REGIONS.indexOf(a),bi=ALL_REGIONS.indexOf(b);return (ai===-1?99:ai)-(bi===-1?99:bi);});
+  actualRegions.forEach(rg=>{const n=roster.filter(p=>p.region===rg).length;const o=document.createElement('option');o.value=rg;o.textContent=rg+' ('+n+')';sel.appendChild(o);});
   sel.value=prev;regionFilter=sel.value||'全部';
   sel.onchange=()=>{regionFilter=sel.value;renderList();};
 }
@@ -614,13 +618,18 @@ document.getElementById('aSaveBtn').onclick=()=>{
   if(editingId){
     const p=roster.find(x=>x.id===editingId);
     if(p){p.name=name;p.region=region;p.shu=shu;p.know=know;p.remind=remind;}
-    scheduleSave();initRegion();
+    scheduleSave();initRegion();renderList();
     document.getElementById('dname').textContent=name;
     document.getElementById('drg').textContent=region;
     show('detailPage');
   }else{
     roster.unshift({id:'p_'+Date.now(),name,region,shu,know,remind,notes:[],tlLog:[]});
-    scheduleSave();initRegion();renderList();show('listPage');
+    scheduleSave();
+    regionFilter=region; vFilter='all';
+    initRegion();
+    document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+    const allBtn=document.querySelector('.fbtn[data-f="all"]');if(allBtn)allBtn.classList.add('active');
+    renderList();show('listPage');
   }
 };
 
