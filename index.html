@@ -196,7 +196,7 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
   </div>
 </div>
 <div class="plist" id="plist"></div>
-<div class="list-tools"><button class="reset" id="resetBtn">重置全部名單</button></div>
+
 </div>
 
 <div id="journalSection" style="display:none;">
@@ -632,12 +632,7 @@ document.getElementById('aDelBtn').onclick=()=>{
   }
 };
 
-document.getElementById('resetBtn').onclick=()=>{
-  if(confirm('確定要重置成原本全部名單嗎？所有標記與紀錄會清掉。')){
-    roster=seed();fileSha=null;scheduleSave();regionFilter='全部';vFilter='all';
-    initRegion();document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
-    document.querySelector('.fbtn[data-f="all"]').classList.add('active');renderList();}
-};
+
 
 if(ghToken){startApp();}else{show('setupPage');}
 </script></body></html>
