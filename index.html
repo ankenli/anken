@@ -147,7 +147,23 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 .arow input,.arow select{border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px;font-family:inherit;background:var(--card);color:var(--ink);}
 .abtn{width:100%;border:none;background:var(--ink);color:#fff;border-radius:12px;padding:15px;font-size:16px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:8px;}
 .adel{width:100%;border:1px solid var(--red);background:none;color:var(--red);border-radius:12px;padding:14px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:10px;}
-</style></head><body>
+
+/* CALENDAR */
+.cal-section{background:#f0f7ff;border:1px solid #bdd6f5;border-radius:12px;padding:14px;margin-bottom:10px;}
+.cal-section-title{font-size:12px;font-weight:700;color:var(--call);letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.cal-row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.cal-row label{font-size:13px;color:var(--ink);}
+.cal-row input,.cal-row textarea{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:var(--card);color:var(--ink);}
+.cal-row textarea{resize:none;min-height:50px;}
+.cal-btn{width:100%;border:none;background:var(--call);color:#fff;border-radius:10px;padding:11px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;margin-top:4px;}
+.cal-btn:disabled{background:#aaa;cursor:not-allowed;}
+.cal-status{font-size:13px;margin-top:8px;padding:8px 10px;border-radius:8px;display:none;}
+.cal-status.ok{background:#e3f1ea;color:var(--done);display:block;}
+.cal-status.err{background:#fde8e8;color:var(--red);display:block;}
+.gcal-setup{font-size:12px;color:var(--call);text-decoration:underline;cursor:pointer;border:none;background:none;font-family:inherit;margin-top:6px;}
+</style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</head><body>
 
 <div id="setupPage">
 <div class="setup-box">
@@ -231,6 +247,31 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 <div class="dsec">
 <div class="dsec-title">天龍八部</div>
 <div id="tlSteps"></div>
+</div>
+
+<div class="dsec" id="calSection">
+<div class="dsec-title">📅 新增到 Google 行事曆</div>
+<div id="calContent">
+  <div class="cal-section">
+    <div class="cal-section-title">📌 約見面</div>
+    <div class="cal-row"><label>日期</label><input type="date" id="calMeetDate"></div>
+    <div class="cal-row"><label>時間</label><input type="time" id="calMeetTime" value="10:00"></div>
+    <div class="cal-row"><label>備註</label><textarea id="calMeetNote" placeholder="見面地點或備註..."></textarea></div>
+    <button class="cal-btn" id="calMeetBtn" onclick="addCalEvent('meet')">新增見面行程</button>
+    <div class="cal-status" id="calMeetStatus"></div>
+  </div>
+  <div class="cal-section">
+    <div class="cal-section-title">🔔 聯絡提醒</div>
+    <div class="cal-row"><label>提醒日期</label><input type="date" id="calRemindDate"></div>
+    <div class="cal-row"><label>提醒時間</label><input type="time" id="calRemindTime" value="09:00"></div>
+    <div class="cal-row"><label>備註</label><textarea id="calRemindNote" placeholder="提醒內容..."></textarea></div>
+    <button class="cal-btn" id="calRemindBtn" onclick="addCalEvent('remind')">新增聯絡提醒</button>
+    <div class="cal-status" id="calRemindStatus"></div>
+  </div>
+  <div style="text-align:center;margin-top:4px;">
+    <button class="gcal-setup" id="gcalSetupBtn">⚙️ 設定 Google Client ID</button>
+  </div>
+</div>
 </div>
 
 <div class="dsec">
@@ -532,6 +573,7 @@ function openDetail(id){
   renderTLSteps(p);
   renderNotes(p);
   const nd=document.getElementById('noteDate');if(nd)nd.value=todayISO();
+  initCalDates();
   show('detailPage');window.scrollTo(0,0);
 }
 
@@ -671,6 +713,108 @@ document.getElementById('aDelBtn').onclick=()=>{
 };
 
 
+
+
+// ===== GOOGLE CALENDAR =====
+const GCAL_SCOPE='https://www.googleapis.com/auth/calendar.events';
+let gcalClientId=localStorage.getItem('gcal_client_id')||'';
+let gcalToken=null;
+let gcalCurrentPerson=null;
+
+function initGcal(){
+  if(!gcalClientId){
+    document.getElementById('calContent').style.opacity='0.5';
+    return;
+  }
+  document.getElementById('calContent').style.opacity='1';
+}
+
+document.getElementById('gcalSetupBtn').onclick=()=>{
+  const id=window.prompt('貼上你的 Google Client ID\n（格式：xxxxx.apps.googleusercontent.com）',gcalClientId||'');
+  if(id&&id.trim()){
+    gcalClientId=id.trim();
+    localStorage.setItem('gcal_client_id',gcalClientId);
+    alert('Client ID 已儲存！');
+    initGcal();
+  }
+};
+
+function getGcalToken(callback){
+  if(gcalToken){callback(gcalToken);return;}
+  if(!gcalClientId){alert('請先設定 Google Client ID');return;}
+  const client=google.accounts.oauth2.initTokenClient({
+    client_id:gcalClientId,
+    scope:GCAL_SCOPE,
+    callback:(resp)=>{
+      if(resp.error){alert('授權失敗：'+resp.error);return;}
+      gcalToken=resp.access_token;
+      setTimeout(()=>{gcalToken=null;},3500000);
+      callback(gcalToken);
+    }
+  });
+  client.requestAccessToken();
+}
+
+function addCalEvent(type){
+  const p=roster.find(x=>x.id===currentId);if(!p)return;
+  const dateEl=document.getElementById(type==='meet'?'calMeetDate':'calRemindDate');
+  const timeEl=document.getElementById(type==='meet'?'calMeetTime':'calRemindTime');
+  const noteEl=document.getElementById(type==='meet'?'calMeetNote':'calRemindNote');
+  const statusEl=document.getElementById(type==='meet'?'calMeetStatus':'calRemindStatus');
+  const btn=document.getElementById(type==='meet'?'calMeetBtn':'calRemindBtn');
+
+  if(!dateEl.value){alert('請選擇日期');return;}
+
+  const dateStr=dateEl.value;
+  const timeStr=timeEl.value||'10:00';
+  const note=noteEl.value.trim();
+  const title=type==='meet'?'見面：'+p.name:'聯絡提醒：'+p.name;
+  const desc=note||(type==='meet'?'與 '+p.name+' 見面':'記得聯絡 '+p.name);
+
+  const start=dateStr+'T'+timeStr+':00';
+  const endHour=parseInt(timeStr.split(':')[0])+1;
+  const end=dateStr+'T'+endHour.toString().padStart(2,'0')+':'+timeStr.split(':')[1]+':00';
+
+  const event={
+    summary:title,
+    description:desc,
+    start:{dateTime:start,timeZone:'Asia/Taipei'},
+    end:{dateTime:end,timeZone:'Asia/Taipei'},
+    reminders:{useDefault:false,overrides:[{method:'popup',minutes:30}]}
+  };
+
+  btn.disabled=true;
+  statusEl.className='cal-status';statusEl.textContent='';
+
+  getGcalToken(async(token)=>{
+    try{
+      const res=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
+        method:'POST',
+        headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
+        body:JSON.stringify(event)
+      });
+      if(!res.ok)throw new Error('新增失敗 '+res.status);
+      statusEl.className='cal-status ok';
+      statusEl.textContent='✅ 已新增到 Google 行事曆！';
+      noteEl.value='';
+    }catch(e){
+      gcalToken=null;
+      statusEl.className='cal-status err';
+      statusEl.textContent='❌ 新增失敗，請重試。';
+    }
+    btn.disabled=false;
+  });
+}
+
+// init calendar dates when opening detail
+function initCalDates(){
+  const today=todayISO();
+  const meetDate=document.getElementById('calMeetDate');
+  const remindDate=document.getElementById('calRemindDate');
+  if(meetDate)meetDate.value=today;
+  if(remindDate)remindDate.value=today;
+  initGcal();
+}
 
 if(ghToken){startApp();}else{show('setupPage');}
 </script></body></html>
