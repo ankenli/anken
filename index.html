@@ -414,7 +414,35 @@ function tlBadge(p){
   return '<span class="pbadge pb-tl">天龍 '+u+'/8</span>';
 }
 
+function updateFilterCounts(){
+  const s=scope();
+  const countMap={
+    'isnew': s.filter(p=>contactStatus(p)==='isnew').length,
+    'overdue': s.filter(p=>contactStatus(p)==='overdue').length,
+    'soon': s.filter(p=>contactStatus(p)==='soon').length,
+    'empty': s.filter(p=>p.shu===0&&p.know===0).length,
+    'shu': s.filter(p=>p.shu===1).length,
+    'pu': s.filter(p=>p.shu===2).length,
+    'bushu': s.filter(p=>p.shu===3).length,
+    'know': s.filter(p=>p.know===1).length,
+    'unknow': s.filter(p=>p.know===2).length,
+    'calling': s.filter(p=>p.notes&&p.notes.length>0).length,
+    'tldone': s.filter(p=>tlUnique(p)>=TL_STEPS.length).length,
+    'all': s.length,
+  };
+  document.querySelectorAll('.fbtn[data-f]').forEach(btn=>{
+    const f=btn.dataset.f;
+    const n=countMap[f];
+    if(n===undefined)return;
+    // strip old count
+    const base=btn.dataset.label||btn.textContent.replace(/\s*\(\d+\)$/,'').trim();
+    btn.dataset.label=base;
+    btn.textContent=base+(n>0?' ('+n+')':'');
+  });
+}
+
 function renderList(){
+  updateFilterCounts();
   const list=document.getElementById('plist');if(!list)return;list.innerHTML='';
   let items=scope().filter(matchFilter);
   if(searchQuery)items=items.filter(p=>p.name.toLowerCase().includes(searchQuery));
