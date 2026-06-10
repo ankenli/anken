@@ -46,6 +46,7 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 .filters{display:flex;gap:6px;flex-wrap:wrap;}
 .fbtn{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:99px;padding:6px 12px;font-size:12.5px;font-family:inherit;cursor:pointer;font-weight:500;}
 .fbtn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.fbtn.f-today{border-color:var(--call);color:var(--call);}.fbtn.f-today.active{background:var(--call);color:#fff;}
 .fbtn.f-new{border-color:#9b59b6;color:#9b59b6;}.fbtn.f-new.active{background:#9b59b6;color:#fff;}
 .fbtn.f-overdue{border-color:var(--red);color:var(--red);}.fbtn.f-overdue.active{background:var(--red);color:#fff;}
 .fbtn.f-soon{border-color:var(--warn);color:var(--warn);}.fbtn.f-soon.active{background:var(--warn);color:#fff;}
@@ -161,6 +162,10 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 .cal-status.ok{background:#e3f1ea;color:var(--done);display:block;}
 .cal-status.err{background:#fde8e8;color:var(--red);display:block;}
 .gcal-setup{font-size:12px;color:var(--call);text-decoration:underline;cursor:pointer;border:none;background:none;font-family:inherit;margin-top:6px;}
+
+.today-btn{width:100%;border:1px solid var(--call);background:none;color:var(--call);border-radius:12px;padding:13px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;margin-bottom:10px;}
+.today-btn.active{background:var(--call);color:#fff;}
+.pb-today{background:#e4ecf4;color:var(--call);}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body>
@@ -201,6 +206,7 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
   <div class="filter-label">其他篩選</div>
   <div class="filters">
     <button class="fbtn active" data-f="all">全部</button>
+    <button class="fbtn f-today" data-f="today">📋 今日清單</button>
     <button class="fbtn" data-f="empty">未整理</button>
     <button class="fbtn" data-f="shu">熟</button>
     <button class="fbtn" data-f="pu">普通</button>
@@ -235,6 +241,7 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 </div>
 <div class="dbody">
 <div id="nextContactBanner"></div>
+<button class="today-btn" id="todayBtn">📋 加入今日清單</button>
 <div class="dsec">
 <div class="dsec-title">分類</div>
 <div class="drow"><label>熟不熟</label>
@@ -330,6 +337,7 @@ function migrate(p){
   if(!p.notes)p.notes=[];
   if(!p.remind)p.remind=DEFAULT_REMIND;
   if(!p.tlLog)p.tlLog=[];
+  if(p.today===undefined)p.today=false;
   return p;
 }
 
@@ -430,6 +438,7 @@ function matchFilter(p){
   const cs=contactStatus(p);
   switch(vFilter){
     case'isnew':return cs==='isnew';case'overdue':return cs==='overdue';case'soon':return cs==='soon';
+    case'today':return p.today===true;
     case'empty':return p.shu===0&&p.know===0;
     case'shu':return p.shu===1;case'pu':return p.shu===2;case'bushu':return p.shu===3;
     case'know':return p.know===1;case'unknow':return p.know===2;
@@ -446,6 +455,10 @@ function contactBadge(p){
   if(cs==='isnew')return '<span class="pbadge pb-new">未聯絡過</span>';
   if(cs==='overdue')return '<span class="pbadge pb-overdue">🔴 該聯絡了</span>';
   if(cs==='soon')return '<span class="pbadge pb-soon">🟡 '+daysUntilNext(p)+'天後</span>';
+  return '';
+}
+function todayBadge(p){
+  if(p.today)return '<span class="pbadge pb-today">📋 今日</span>';
   return '';
 }
 function tlBadge(p){
@@ -493,7 +506,7 @@ function renderList(){
     const row=document.createElement('div');
     row.className='prow'+(cs==='overdue'?' overdue':cs==='soon'?' soon':cs==='isnew'?' isnew':'');
     const rg=regionFilter==='全部'?'<span class="prg">'+p.region+'</span>':'';
-    row.innerHTML='<span class="pname"></span>'+rg+'<div class="pbadges">'+shuBadge(p)+knowBadge(p)+contactBadge(p)+tlBadge(p)+'</div><span class="arrow">›</span>';
+    row.innerHTML='<span class="pname"></span>'+rg+'<div class="pbadges">'+todayBadge(p)+shuBadge(p)+knowBadge(p)+contactBadge(p)+tlBadge(p)+'</div><span class="arrow">›</span>';
     row.querySelector('.pname').textContent=p.name;
     row.onclick=()=>openDetail(p.id);
     list.appendChild(row);
@@ -570,6 +583,12 @@ function openDetail(id){
   document.getElementById('dKnow').value=p.know;
   buildRemindSelect(document.getElementById('dRemind'),p.remind||DEFAULT_REMIND);
   renderNextContactBanner(p);
+  // update today button
+  const tb=document.getElementById('todayBtn');
+  if(tb){
+    if(p.today){tb.textContent='✅ 已在今日清單（點擊移除）';tb.classList.add('active');}
+    else{tb.textContent='📋 加入今日清單';tb.classList.remove('active');}
+  }
   renderTLSteps(p);
   renderNotes(p);
   const nd=document.getElementById('noteDate');if(nd)nd.value=todayISO();
@@ -578,6 +597,14 @@ function openDetail(id){
 }
 
 document.getElementById('backBtn').onclick=()=>{show('listPage');renderList();};
+document.getElementById('todayBtn').onclick=()=>{
+  const p=roster.find(x=>x.id===currentId);if(!p)return;
+  p.today=!p.today;
+  const tb=document.getElementById('todayBtn');
+  if(p.today){tb.textContent='✅ 已在今日清單（點擊移除）';tb.classList.add('active');}
+  else{tb.textContent='📋 加入今日清單';tb.classList.remove('active');}
+  scheduleSave();
+};
 document.getElementById('editBtn').onclick=()=>openAddPage(currentId);
 document.getElementById('dShu').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.shu=parseInt(document.getElementById('dShu').value);scheduleSave();}};
 document.getElementById('dKnow').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.know=parseInt(document.getElementById('dKnow').value);scheduleSave();}};
