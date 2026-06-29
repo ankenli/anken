@@ -166,46 +166,14 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 .today-btn{width:100%;border:1px solid var(--call);background:none;color:var(--call);border-radius:12px;padding:13px;font-size:15px;font-weight:500;font-family:inherit;cursor:pointer;margin-bottom:10px;}
 .today-btn.active{background:var(--call);color:#fff;}
 .pb-today{background:#e4ecf4;color:var(--call);}
-.site-switch{position:fixed;top:12px;right:12px;z-index:1000;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;text-decoration:none;box-shadow:0 3px 12px rgba(0,0,0,.08);}
-.site-switch:active{transform:scale(.97);}
 
-/* Desktop presentation polish from the styled standalone mockup */
-button,.prow,.journal-item,.tl-step,.note-item,.fbtn,.tab,.site-switch{transition:transform .12s ease,box-shadow .12s ease,background-color .12s ease,border-color .12s ease;}
-.setup-box,.prow,.journal-item,.tl-step,.note-item,.cal-section{box-shadow:0 6px 20px rgba(44,42,38,.08);}
-.prow:hover,.journal-item:hover,.tl-step:hover,.note-item:hover{box-shadow:0 8px 24px rgba(44,42,38,.12);}
-.fbtn:hover,.journal-date-row button:hover,.site-switch:hover{box-shadow:0 4px 14px rgba(44,42,38,.10);}
-input,select,textarea,button{outline-color:var(--ink);}
-
-@media (min-width:700px){
-  body{background:#d9d4c8;padding:24px 0 96px;min-height:100vh;}
-  #setupPage,#loadingPage,#listPage,#detailPage,#addPage{
-    width:390px;
-    max-width:calc(100vw - 32px);
-    min-height:760px;
-    max-height:calc(100vh - 48px);
-    margin:0 auto;
-    background:var(--bg);
-    border:1px solid rgba(0,0,0,.06);
-    border-radius:34px;
-    box-shadow:0 12px 40px rgba(44,42,38,.28);
-    overflow-y:auto;
-    overflow-x:hidden;
-  }
-  #setupPage,#loadingPage{align-items:center;justify-content:center;}
-  #listPage{padding:24px 14px 96px;}
-  .wrap,.dbody,.abody{max-width:100%;}
-  .dheader,.aheader{border-radius:34px 34px 0 0;}
-  .fab{right:calc(50% - 195px + 20px);bottom:44px;}
-  .site-switch{top:36px;right:calc(50% - 195px + 14px);}
-}
-
-@media (max-width:699px){
-  .site-switch{top:10px;right:10px;}
-}
+.pb-qa{background:#e8f4e8;color:#2e7d32;}
+.pb-qb{background:#e3f2fd;color:#1565c0;}
+.pb-qc{background:#fff3e0;color:#e65100;}
+.pb-qd{background:#fce4ec;color:#c62828;}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body>
-<a class="site-switch" href="https://ankenli.github.io/helpme/" aria-label="Open Helpme page">Helpme</a>
 
 <div id="setupPage">
 <div class="setup-box">
@@ -251,6 +219,14 @@ input,select,textarea,button{outline-color:var(--ink);}
     <button class="fbtn" data-f="know">知道保險</button>
     <button class="fbtn" data-f="unknow">不知道保險</button>
     <button class="fbtn" data-f="calling">聯絡中</button>
+    <button class="fbtn" data-f="q1A">關係A</button>
+    <button class="fbtn" data-f="q1B">關係B</button>
+    <button class="fbtn" data-f="q1C">關係C</button>
+    <button class="fbtn" data-f="q1D">關係D</button>
+    <button class="fbtn" data-f="q2A">財富A</button>
+    <button class="fbtn" data-f="q2B">財富B</button>
+    <button class="fbtn" data-f="q2C">財富C</button>
+    <button class="fbtn" data-f="q2D">財富D</button>
     <button class="fbtn" data-f="tldone">天龍完成</button>
   </div>
 </div>
@@ -286,6 +262,25 @@ input,select,textarea,button{outline-color:var(--ink);}
 <div class="drow"><label>知道保險</label>
 <select id="dKnow"><option value="0">未設定</option><option value="1">知道</option><option value="2">不知道</option><option value="3">不清楚</option></select></div>
 <div class="drow"><label>提醒間隔</label><select id="dRemind"></select></div>
+</div>
+<div class="dsec">
+<div class="dsec-title">象限分類</div>
+<div class="drow"><label>朋友關係</label>
+<select id="dQ1">
+<option value="0">未設定</option>
+<option value="A">A｜朋友多，有信任度</option>
+<option value="B">B｜朋友多，沒信任度</option>
+<option value="C">C｜朋友少，有信任度</option>
+<option value="D">D｜朋友少，沒信任度</option>
+</select></div>
+<div class="drow"><label>財富信任</label>
+<select id="dQ2">
+<option value="0">未設定</option>
+<option value="A">A｜有錢，有信任度</option>
+<option value="B">B｜沒錢，有信任度</option>
+<option value="C">C｜有錢，沒信任度</option>
+<option value="D">D｜沒錢，沒信任度</option>
+</select></div>
 </div>
 
 <div class="dsec">
@@ -343,6 +338,22 @@ input,select,textarea,button{outline-color:var(--ink);}
   <div class="arow"><label>知道保險</label>
   <select id="aKnow"><option value="0">未設定</option><option value="1">知道</option><option value="2">不知道</option><option value="3">不清楚</option></select></div>
   <div class="arow"><label>提醒間隔</label><select id="aRemind"></select></div>
+  <div class="arow"><label>朋友關係象限</label>
+  <select id="aQ1">
+  <option value="0">未設定</option>
+  <option value="A">A｜朋友多，有信任度</option>
+  <option value="B">B｜朋友多，沒信任度</option>
+  <option value="C">C｜朋友少，有信任度</option>
+  <option value="D">D｜朋友少，沒信任度</option>
+  </select></div>
+  <div class="arow"><label>財富信任象限</label>
+  <select id="aQ2">
+  <option value="0">未設定</option>
+  <option value="A">A｜有錢，有信任度</option>
+  <option value="B">B｜沒錢，有信任度</option>
+  <option value="C">C｜有錢，沒信任度</option>
+  <option value="D">D｜沒錢，沒信任度</option>
+  </select></div>
   <button class="abtn" id="aSaveBtn">儲存</button>
   <button class="adel" id="aDelBtn" style="display:none;">刪除這個人</button>
 </div>
@@ -375,6 +386,8 @@ function migrate(p){
   if(!p.remind)p.remind=DEFAULT_REMIND;
   if(!p.tlLog)p.tlLog=[];
   if(p.today===undefined)p.today=false;
+  if(!p.q1)p.q1='0';
+  if(!p.q2)p.q2='0';
   return p;
 }
 
@@ -480,6 +493,8 @@ function matchFilter(p){
     case'shu':return p.shu===1;case'pu':return p.shu===2;case'bushu':return p.shu===3;
     case'know':return p.know===1;case'unknow':return p.know===2;
     case'calling':return p.notes&&p.notes.length>0;
+    case'q1A':return p.q1==='A';case'q1B':return p.q1==='B';case'q1C':return p.q1==='C';case'q1D':return p.q1==='D';
+    case'q2A':return p.q2==='A';case'q2B':return p.q2==='B';case'q2C':return p.q2==='C';case'q2D':return p.q2==='D';
     case'tldone':return tlUnique(p)>=TL_STEPS.length;
     default:return true;
   }
@@ -487,6 +502,12 @@ function matchFilter(p){
 
 function shuBadge(p){const a=[['pb-none','未分類'],['pb-shu','熟'],['pb-pu','普通'],['pb-bz','不熟']];const[c,t]=a[p.shu];return '<span class="pbadge '+c+'">'+t+'</span>';}
 function knowBadge(p){if(p.know===1)return '<span class="pbadge pb-know">知道保險</span>';if(p.know===2)return '<span class="pbadge pb-unknow">不知道</span>';if(p.know===3)return '<span class="pbadge pb-none">不清楚</span>';return '';}
+function quadBadge(p){
+  let out='';
+  if(p.q1&&p.q1!=='0')out+='<span class="pbadge pb-q'+p.q1.toLowerCase()+'">關係'+p.q1+'</span>';
+  if(p.q2&&p.q2!=='0')out+='<span class="pbadge pb-q'+p.q2.toLowerCase()+'">財富'+p.q2+'</span>';
+  return out;
+}
 function contactBadge(p){
   const cs=contactStatus(p);
   if(cs==='isnew')return '<span class="pbadge pb-new">未聯絡過</span>';
@@ -543,7 +564,7 @@ function renderList(){
     const row=document.createElement('div');
     row.className='prow'+(cs==='overdue'?' overdue':cs==='soon'?' soon':cs==='isnew'?' isnew':'');
     const rg=regionFilter==='全部'?'<span class="prg">'+p.region+'</span>':'';
-    row.innerHTML='<span class="pname"></span>'+rg+'<div class="pbadges">'+todayBadge(p)+shuBadge(p)+knowBadge(p)+contactBadge(p)+tlBadge(p)+'</div><span class="arrow">›</span>';
+    row.innerHTML='<span class="pname"></span>'+rg+'<div class="pbadges">'+todayBadge(p)+quadBadge(p)+shuBadge(p)+knowBadge(p)+contactBadge(p)+tlBadge(p)+'</div><span class="arrow">›</span>';
     row.querySelector('.pname').textContent=p.name;
     row.onclick=()=>openDetail(p.id);
     list.appendChild(row);
@@ -646,6 +667,8 @@ document.getElementById('editBtn').onclick=()=>openAddPage(currentId);
 document.getElementById('dShu').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.shu=parseInt(document.getElementById('dShu').value);scheduleSave();}};
 document.getElementById('dKnow').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.know=parseInt(document.getElementById('dKnow').value);scheduleSave();}};
 document.getElementById('dRemind').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.remind=parseInt(document.getElementById('dRemind').value);renderNextContactBanner(p);scheduleSave();}};
+document.getElementById('dQ1').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.q1=document.getElementById('dQ1').value;scheduleSave();}};
+document.getElementById('dQ2').onchange=()=>{const p=roster.find(x=>x.id===currentId);if(p){p.q2=document.getElementById('dQ2').value;scheduleSave();}};
 
 function renderNotes(p){
   const list=document.getElementById('notesList');if(!list)return;list.innerHTML='';
@@ -736,6 +759,8 @@ function openAddPage(id){
   document.getElementById('aShu').value=p?p.shu:0;
   document.getElementById('aKnow').value=p?p.know:0;
   buildRemindSelect(document.getElementById('aRemind'),p?p.remind:DEFAULT_REMIND);
+  document.getElementById('aQ1').value=p?p.q1||'0':'0';
+  document.getElementById('aQ2').value=p?p.q2||'0':'0';
   document.getElementById('aDelBtn').style.display=p?'block':'none';
   show('addPage');window.scrollTo(0,0);
 }
@@ -749,9 +774,11 @@ document.getElementById('aSaveBtn').onclick=()=>{
   const shu=parseInt(document.getElementById('aShu').value);
   const know=parseInt(document.getElementById('aKnow').value);
   const remind=parseInt(document.getElementById('aRemind').value);
+  const q1=document.getElementById('aQ1').value;
+  const q2=document.getElementById('aQ2').value;
   if(editingId){
     const p=roster.find(x=>x.id===editingId);
-    if(p){p.name=name;p.region=region;p.shu=shu;p.know=know;p.remind=remind;}
+    if(p){p.name=name;p.region=region;p.shu=shu;p.know=know;p.remind=remind;p.q1=q1;p.q2=q2;}
     scheduleSave();initRegion();renderList();
     document.getElementById('dname').textContent=name;
     document.getElementById('drg').textContent=region;
