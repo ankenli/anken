@@ -208,17 +208,31 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
   </div>
 </div>
 <div class="filter-group" style="margin-top:10px;">
-  <div class="filter-label">其他篩選</div>
+  <div class="filter-label">檢視</div>
   <div class="filters">
     <button class="fbtn active" data-f="all">全部</button>
     <button class="fbtn f-today" data-f="today">📋 今日清單</button>
-    <button class="fbtn" data-f="empty">未整理</button>
+  </div>
+</div>
+<div class="filter-group" style="margin-top:10px;">
+  <div class="filter-label">熟不熟</div>
+  <div class="filters">
     <button class="fbtn" data-f="shu">熟</button>
     <button class="fbtn" data-f="pu">普通</button>
     <button class="fbtn" data-f="bushu">不熟</button>
-    <button class="fbtn" data-f="know">知道保險</button>
-    <button class="fbtn" data-f="unknow">不知道保險</button>
-    <button class="fbtn" data-f="calling">聯絡中</button>
+  </div>
+</div>
+<div class="filter-group" style="margin-top:10px;">
+  <div class="filter-label">知道保險</div>
+  <div class="filters">
+    <button class="fbtn" data-f="know">知道</button>
+    <button class="fbtn" data-f="unknow">不知道</button>
+    <button class="fbtn" data-f="unclear">不清楚</button>
+  </div>
+</div>
+<div class="filter-group" style="margin-top:10px;">
+  <div class="filter-label">象限</div>
+  <div class="filters">
     <button class="fbtn" data-f="q1A">關係A</button>
     <button class="fbtn" data-f="q1B">關係B</button>
     <button class="fbtn" data-f="q1C">關係C</button>
@@ -227,6 +241,13 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
     <button class="fbtn" data-f="q2B">財富B</button>
     <button class="fbtn" data-f="q2C">財富C</button>
     <button class="fbtn" data-f="q2D">財富D</button>
+  </div>
+</div>
+<div class="filter-group" style="margin-top:10px;">
+  <div class="filter-label">其他</div>
+  <div class="filters">
+    <button class="fbtn" data-f="empty">未整理</button>
+    <button class="fbtn" data-f="calling">聯絡中</button>
     <button class="fbtn" data-f="tldone">天龍完成</button>
   </div>
 </div>
@@ -491,7 +512,7 @@ function matchFilter(p){
     case'today':return p.today===true;
     case'empty':return p.shu===0&&p.know===0;
     case'shu':return p.shu===1;case'pu':return p.shu===2;case'bushu':return p.shu===3;
-    case'know':return p.know===1;case'unknow':return p.know===2;
+    case'know':return p.know===1;case'unknow':return p.know===2;case'unclear':return p.know===3;
     case'calling':return p.notes&&p.notes.length>0;
     case'q1A':return p.q1==='A';case'q1B':return p.q1==='B';case'q1C':return p.q1==='C';case'q1D':return p.q1==='D';
     case'q2A':return p.q2==='A';case'q2B':return p.q2==='B';case'q2C':return p.q2==='C';case'q2D':return p.q2==='D';
@@ -538,6 +559,7 @@ function updateFilterCounts(){
     'bushu': s.filter(p=>p.shu===3).length,
     'know': s.filter(p=>p.know===1).length,
     'unknow': s.filter(p=>p.know===2).length,
+    'unclear': s.filter(p=>p.know===3).length,
     'calling': s.filter(p=>p.notes&&p.notes.length>0).length,
     'tldone': s.filter(p=>tlUnique(p)>=TL_STEPS.length).length,
     'all': s.length,
