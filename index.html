@@ -201,10 +201,10 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 <div class="searchbar"><input id="searchInput" type="search" placeholder="搜尋名字..."></div>
 <div class="filter-group">
   <div class="filter-label">聯絡提醒</div>
-  <div class="filters">
-    <button class="fbtn f-new" data-f="isnew">未聯絡過</button>
-    <button class="fbtn f-overdue" data-f="overdue">🔴 該聯絡了</button>
-    <button class="fbtn f-soon" data-f="soon">🟡 快到了</button>
+  <div class="filters" id="contactFilters">
+    <button class="fbtn f-new" data-contact="isnew">未聯絡過</button>
+    <button class="fbtn f-overdue" data-contact="overdue">🔴 該聯絡了</button>
+    <button class="fbtn f-soon" data-contact="soon">🟡 快到了</button>
   </div>
 </div>
 <div class="filter-group" style="margin-top:10px;">
@@ -396,7 +396,7 @@ const SEED=[{"n": "美秀阿姨", "r": "台南"}, {"n": "rain", "r": "台南"}, 
 const REGIONS=["台南", "高雄", "嘉義", "台中", "台北", "新竹", "屏東", "桃園", "雲林", "花蓮", "台東", "未知"];
 const ALL_REGIONS=["台北","新北","桃園","新竹","苗栗","台中","彰化","南投","雲林","嘉義","台南","高雄","屏東","宜蘭","花蓮","台東","基隆","澎湖","金門","馬祖","未知"];
 let roster=[],regionFilter='全部',currentId=null,editingId=null,fileSha=null,searchQuery='';
-let viewFilter='all';
+let viewFilter='all';let contactFilter=null;
 let activeShu=[],activeKnow=[],activeOther=[],activeQ1=null,activeQ2=null;
 let ghToken=localStorage.getItem('gh_token')||'';
 let saveTimer=null;
@@ -514,6 +514,8 @@ function initRegion(){
 function scope(){return roster.filter(p=>regionFilter==='全部'||p.region===regionFilter);}
 function matchFilter(p){
   const cs=contactStatus(p);
+  // contact filter
+  if(contactFilter){const cs=contactStatus(p);if(cs!==contactFilter)return false;}
   // view filter
   if(viewFilter==='today'&&p.today!==true)return false;
   // shu multi-select (OR within group)
@@ -601,6 +603,18 @@ function updateFilterCounts(){
     if(btn){const base=btn.dataset.label||btn.textContent.replace(/\s*\(\d+\)$/,'').trim();btn.dataset.label=base;btn.textContent=base+(n>0?' ('+n+')':'');}
   });
   // view counts
+  // contact reminder counts
+  const contactCounts={
+    isnew:s.filter(p=>contactStatus(p)==='isnew').length,
+    overdue:s.filter(p=>contactStatus(p)==='overdue').length,
+    soon:s.filter(p=>contactStatus(p)==='soon').length
+  };
+  Object.keys(contactCounts).forEach(val=>{
+    const n=contactCounts[val];
+    const btn=document.querySelector('[data-contact="'+val+'"]');
+    if(btn){const base=btn.dataset.label||btn.textContent.replace(/\s*\(\d+\)$/,'').trim();btn.dataset.label=base;btn.textContent=base+(n>0?' ('+n+')':'');}
+  });
+
   const allBtn=document.querySelector('[data-view="all"]');
   if(allBtn){const base=allBtn.dataset.label||allBtn.textContent.replace(/\s*\(\d+\)$/,'').trim();allBtn.dataset.label=base;allBtn.textContent=base+(s.length>0?' ('+s.length+')':'');}
   const todayBtn2=document.querySelector('[data-view="today"]');
@@ -746,6 +760,22 @@ document.getElementById('noteAddBtn').onclick=()=>{
   p.notes.push({date:d,text:v});
   inp.value='';scheduleSave();renderNotes(p);renderNextContactBanner(p);
 };
+
+// Contact reminder filter (single-select, toggleable)
+document.querySelectorAll('#contactFilters .fbtn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const val=btn.dataset.contact;
+    if(contactFilter===val){
+      contactFilter=null;
+      btn.classList.remove('active');
+    }else{
+      document.querySelectorAll('#contactFilters .fbtn').forEach(b=>b.classList.remove('active'));
+      contactFilter=val;
+      btn.classList.add('active');
+    }
+    renderList();
+  });
+});
 
 // View filter (single-select, separate group)
 document.querySelectorAll('#viewFilters .fbtn').forEach(btn=>{
