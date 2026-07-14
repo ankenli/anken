@@ -171,6 +171,13 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 .pb-qb{background:#e3f2fd;color:#1565c0;}
 .pb-qc{background:#fff3e0;color:#e65100;}
 .pb-qd{background:#fce4ec;color:#c62828;}
+
+.pause-btn{width:100%;border:1px solid var(--muted);background:none;color:var(--muted);border-radius:12px;padding:11px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;margin-bottom:10px;}
+.pause-btn.paused{border-color:var(--bushu);color:var(--bushu);background:#fef9f0;}
+
+.client-btn{width:100%;border:1px solid var(--done);background:none;color:var(--done);border-radius:12px;padding:11px;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;margin-bottom:10px;}
+.client-btn.active{background:var(--done);color:#fff;}
+.pb-client{background:#e3f1ea;color:var(--done);}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head><body>
@@ -254,6 +261,7 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
     <button class="fbtn" data-multi="other" data-val="empty">未整理</button>
     <button class="fbtn" data-multi="other" data-val="calling">聯絡中</button>
     <button class="fbtn" data-multi="other" data-val="tldone">天龍完成</button>
+    <button class="fbtn" data-multi="other" data-val="client">⭐ 客戶</button>
   </div>
 </div>
 <div class="plist" id="plist"></div>
@@ -281,6 +289,8 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 <div class="dbody">
 <div id="nextContactBanner"></div>
 <button class="today-btn" id="todayBtn">📋 加入今日清單</button>
+<button class="pause-btn" id="pauseBtn">🔕 關閉提醒</button>
+<button class="client-btn" id="clientBtn">⭐ 設為客戶</button>
 <div class="dsec">
 <div class="dsec-title">分類</div>
 <div class="drow"><label>熟不熟</label>
@@ -416,6 +426,8 @@ function migrate(p){
   if(p.today===undefined)p.today=false;
   if(!p.q1)p.q1='0';
   if(!p.q2)p.q2='0';
+  if(p.pauseRemind===undefined)p.pauseRemind=false;
+  if(p.isClient===undefined)p.isClient=false;
   return p;
 }
 
@@ -441,6 +453,7 @@ function lastContactDate(p){
   return dates.length?new Date(Math.max(...dates)):null;
 }
 function contactStatus(p){
+  if(p.pauseRemind)return 'isnew';
   const remind=p.remind||DEFAULT_REMIND;
   const last=lastContactDate(p);
   if(!last)return 'isnew';
@@ -532,6 +545,7 @@ function matchFilter(p){
       if(val==='empty')return p.shu===0&&p.know===0;
       if(val==='calling')return p.notes&&p.notes.length>0;
       if(val==='tldone')return tlUnique(p)>=TL_STEPS.length;
+      if(val==='client')return p.isClient===true;
       return false;
     });
     if(!otherMatch)return false;
@@ -552,6 +566,10 @@ function contactBadge(p){
   if(cs==='isnew')return '<span class="pbadge pb-new">未聯絡過</span>';
   if(cs==='overdue')return '<span class="pbadge pb-overdue">🔴 該聯絡了</span>';
   if(cs==='soon')return '<span class="pbadge pb-soon">🟡 '+daysUntilNext(p)+'天後</span>';
+  return '';
+}
+function clientBadge(p){
+  if(p.isClient)return '<span class="pbadge pb-client">⭐ 客戶</span>';
   return '';
 }
 function todayBadge(p){
@@ -595,7 +613,8 @@ function updateFilterCounts(){
   const otherCounts={
     empty:s.filter(p=>p.shu===0&&p.know===0).length,
     calling:s.filter(p=>p.notes&&p.notes.length>0).length,
-    tldone:s.filter(p=>tlUnique(p)>=TL_STEPS.length).length
+    tldone:s.filter(p=>tlUnique(p)>=TL_STEPS.length).length,
+    client:s.filter(p=>p.isClient===true).length
   };
   Object.keys(otherCounts).forEach(val=>{
     const n=otherCounts[val];
@@ -632,7 +651,7 @@ function renderList(){
     const row=document.createElement('div');
     row.className='prow'+(cs==='overdue'?' overdue':cs==='soon'?' soon':cs==='isnew'?' isnew':'');
     const rg=regionFilter==='全部'?'<span class="prg">'+p.region+'</span>':'';
-    row.innerHTML='<span class="pname"></span>'+rg+'<div class="pbadges">'+todayBadge(p)+quadBadge(p)+shuBadge(p)+knowBadge(p)+contactBadge(p)+tlBadge(p)+'</div><span class="arrow">›</span>';
+    row.innerHTML='<span class="pname"></span>'+rg+'<div class="pbadges">'+clientBadge(p)+todayBadge(p)+quadBadge(p)+shuBadge(p)+knowBadge(p)+contactBadge(p)+tlBadge(p)+'</div><span class="arrow">›</span>';
     row.querySelector('.pname').textContent=p.name;
     row.onclick=()=>openDetail(p.id);
     list.appendChild(row);
@@ -723,6 +742,22 @@ function openDetail(id){
 }
 
 document.getElementById('backBtn').onclick=()=>{show('listPage');renderList();};
+document.getElementById('clientBtn').onclick=()=>{
+  const p=roster.find(x=>x.id===currentId);if(!p)return;
+  p.isClient=!p.isClient;
+  const cb=document.getElementById('clientBtn');
+  if(p.isClient){cb.textContent='⭐ 已是客戶（點擊取消）';cb.classList.add('active');}
+  else{cb.textContent='⭐ 設為客戶';cb.classList.remove('active');}
+  scheduleSave();renderList();
+};
+document.getElementById('pauseBtn').onclick=()=>{
+  const p=roster.find(x=>x.id===currentId);if(!p)return;
+  p.pauseRemind=!p.pauseRemind;
+  const pb=document.getElementById('pauseBtn');
+  if(p.pauseRemind){pb.textContent='🔔 恢復提醒';pb.classList.add('paused');}
+  else{pb.textContent='🔕 關閉提醒';pb.classList.remove('paused');}
+  scheduleSave();
+};
 document.getElementById('todayBtn').onclick=()=>{
   const p=roster.find(x=>x.id===currentId);if(!p)return;
   p.today=!p.today;
