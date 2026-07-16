@@ -934,10 +934,10 @@ document.getElementById('aSaveBtn').onclick=()=>{
   }else{
     roster.unshift({id:'p_'+Date.now(),name,region,shu,know,remind,notes:[],tlLog:[]});
     scheduleSave();
-    regionFilter=region; vFilter='all';
+    regionFilter=region;viewFilter='all';activeShu=[];activeKnow=[];activeOther=[];activeQ1=null;activeQ2=null;
     initRegion();
-    document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
-    const allBtn=document.querySelector('.fbtn[data-f="all"]');if(allBtn)allBtn.classList.add('active');
+    document.querySelectorAll('[data-view]').forEach(b=>b.classList.remove('active'));
+    const allBtn=document.querySelector('[data-view="all"]');if(allBtn)allBtn.classList.add('active');
     renderList();show('listPage');
   }
 };
