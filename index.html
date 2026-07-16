@@ -326,26 +326,20 @@ h1{font-family:"Noto Serif TC",serif;font-weight:700;font-size:22px;margin:0 0 2
 
 <div class="dsec" id="calSection">
 <div class="dsec-title">📅 新增到 Google 行事曆</div>
-<div id="calContent">
-  <div class="cal-section">
-    <div class="cal-section-title">📌 約見面</div>
-    <div class="cal-row"><label>日期</label><input type="date" id="calMeetDate"></div>
-    <div class="cal-row"><label>時間</label><input type="time" id="calMeetTime" value="10:00"></div>
-    <div class="cal-row"><label>備註</label><textarea id="calMeetNote" placeholder="見面地點或備註..."></textarea></div>
-    <button class="cal-btn" id="calMeetBtn" onclick="addCalEvent('meet')">新增見面行程</button>
-    <div class="cal-status" id="calMeetStatus"></div>
-  </div>
-  <div class="cal-section">
-    <div class="cal-section-title">🔔 聯絡提醒</div>
-    <div class="cal-row"><label>提醒日期</label><input type="date" id="calRemindDate"></div>
-    <div class="cal-row"><label>提醒時間</label><input type="time" id="calRemindTime" value="09:00"></div>
-    <div class="cal-row"><label>備註</label><textarea id="calRemindNote" placeholder="提醒內容..."></textarea></div>
-    <button class="cal-btn" id="calRemindBtn" onclick="addCalEvent('remind')">新增聯絡提醒</button>
-    <div class="cal-status" id="calRemindStatus"></div>
-  </div>
-  <div style="text-align:center;margin-top:4px;">
-    <button class="gcal-setup" id="gcalSetupBtn">⚙️ 設定 Google Client ID</button>
-  </div>
+<div class="cal-section">
+  <div class="cal-row"><label>類型</label>
+  <select id="calType" style="flex:1;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;font-family:inherit;background:var(--card);color:var(--ink);">
+    <option value="meet">📌 約見面</option>
+    <option value="remind">🔔 聯絡提醒</option>
+  </select></div>
+  <div class="cal-row"><label>日期</label><input type="date" id="calDate"></div>
+  <div class="cal-row"><label>時間</label><input type="time" id="calTime" value="10:00"></div>
+  <div class="cal-row"><label>備註</label><textarea id="calNote" placeholder="備註..." style="border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit;background:var(--card);color:var(--ink);resize:none;min-height:50px;"></textarea></div>
+  <button class="cal-btn" id="calAddBtn" onclick="addCalEvent()">新增到行事曆</button>
+  <div class="cal-status" id="calStatus"></div>
+</div>
+<div style="text-align:center;margin-top:4px;">
+  <button class="gcal-setup" id="gcalSetupBtn">⚙️ 設定 Google Client ID</button>
 </div>
 </div>
 
@@ -1000,37 +994,30 @@ function getGcalToken(callback){
   client.requestAccessToken();
 }
 
-function addCalEvent(type){
+function addCalEvent(){
   const p=roster.find(x=>x.id===currentId);if(!p)return;
-  const dateEl=document.getElementById(type==='meet'?'calMeetDate':'calRemindDate');
-  const timeEl=document.getElementById(type==='meet'?'calMeetTime':'calRemindTime');
-  const noteEl=document.getElementById(type==='meet'?'calMeetNote':'calRemindNote');
-  const statusEl=document.getElementById(type==='meet'?'calMeetStatus':'calRemindStatus');
-  const btn=document.getElementById(type==='meet'?'calMeetBtn':'calRemindBtn');
-
+  const type=document.getElementById('calType').value;
+  const dateEl=document.getElementById('calDate');
+  const timeEl=document.getElementById('calTime');
+  const noteEl=document.getElementById('calNote');
+  const statusEl=document.getElementById('calStatus');
+  const btn=document.getElementById('calAddBtn');
   if(!dateEl.value){alert('請選擇日期');return;}
-
   const dateStr=dateEl.value;
   const timeStr=timeEl.value||'10:00';
   const note=noteEl.value.trim();
   const title=type==='meet'?'見面：'+p.name:'聯絡提醒：'+p.name;
   const desc=note||(type==='meet'?'與 '+p.name+' 見面':'記得聯絡 '+p.name);
-
   const start=dateStr+'T'+timeStr+':00';
   const endHour=parseInt(timeStr.split(':')[0])+1;
   const end=dateStr+'T'+endHour.toString().padStart(2,'0')+':'+timeStr.split(':')[1]+':00';
-
   const event={
-    summary:title,
-    description:desc,
+    summary:title,description:desc,
     start:{dateTime:start,timeZone:'Asia/Taipei'},
     end:{dateTime:end,timeZone:'Asia/Taipei'},
     reminders:{useDefault:false,overrides:[{method:'popup',minutes:30}]}
   };
-
-  btn.disabled=true;
-  statusEl.className='cal-status';statusEl.textContent='';
-
+  btn.disabled=true;statusEl.className='cal-status';statusEl.textContent='';
   getGcalToken(async(token)=>{
     try{
       const res=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
@@ -1038,14 +1025,17 @@ function addCalEvent(type){
         headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},
         body:JSON.stringify(event)
       });
-      if(!res.ok)throw new Error('新增失敗 '+res.status);
+      if(!res.ok){
+        const errData=await res.json().catch(()=>({}));
+        throw new Error(errData.error&&errData.error.message?errData.error.message:'HTTP '+res.status);
+      }
       statusEl.className='cal-status ok';
       statusEl.textContent='✅ 已新增到 Google 行事曆！';
       noteEl.value='';
     }catch(e){
       gcalToken=null;
       statusEl.className='cal-status err';
-      statusEl.textContent='❌ 新增失敗，請重試。';
+      statusEl.textContent='❌ 新增失敗：'+e.message;
     }
     btn.disabled=false;
   });
